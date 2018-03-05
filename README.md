@@ -9,7 +9,7 @@ exp     if exp (| pat -> exp)
         __op (int name...)... in exp
         letrec (name name... = exp);... in exp
         infexp
-apat    false / true / int / real / string / (exp) / [exp,...] / name
+apat    false / true / int / real / string / (exp,...) / [exp,...] / name
 pat     apat[:pat]
 ```
 

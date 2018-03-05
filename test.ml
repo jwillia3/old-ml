@@ -18,8 +18,8 @@ let succ x = 1 + x
 let pred x = -1 + x
 let flip f x y = f y x
 let pair x y = (x, y)
-let fst pair = if pair | (x, _) -> x
-let snd pair = if pair | (_, y) -> y
+let fst pair = let (x, _) = pair in x
+let snd pair = let (_, x) = pair in x
 let curry f x y = f (x, y)
 let uncurry f xy = f (fst xy) (snd xy)
 let hd xs = if xs | x:_ -> x
@@ -41,19 +41,13 @@ let rec foldl1 ⊕ xs = foldl (⊕) (hd xs) (tl xs)
 let ++ xs ys = foldr (:) ys xs
 let reverse xs = foldl (flip (:)) [] xs
 let copy xs = foldr (:) [] xs
-let map f xs = foldr ((:) . f) [] xs
+let map f xs = foldr (fun x rest -> f x : rest) [] xs
 let filter ok? xs = let f x rest =  if ok? x
                                     then x : rest
                                     else rest
                     in foldr f [] xs
 let concat xss = foldr (++) [] xss
 let length xs = foldl (fun n _ -> 1 + n) 0 xs
-let split_at n xs =
-    let rec do n xs out =
-        if n == 0
-        then if out | (taken, left) -> (reverse taken, left)
-        else do (pred n) (tl xs) (hd xs : hd out, tl xs)
-    in do n xs ([], [])
 let all? ok? xs = foldl (fun rest x -> rest and ok? x) true xs
 let rec any? ok? xs =
     if xs
@@ -67,12 +61,20 @@ let max x y = if x > y then x else y
 let minimum xs = foldl1 min xs
 let maximum xs = foldl1 max xs
 let between a c b = a <= b and b <= c
+let splitat index xs =
+    let rec repeat index state =
+        let (output, remaining) = state in
+            if index == 0
+            then (reverse output, remaining)
+            else let (first : remaining) = remaining
+                 in repeat (index - 1) (first : output, remaining)
+    in repeat index ([], xs)
 let echo x = let _ = print x
              let _ = print "\n"
              in x
 let @@ str i =  if i >= 0
                 then subs i (i + 1) str
-                else let n = lens str
+                else let n = lengths str
                      in subs (i + n) (i + n + 1) str
 let itoa n =
     if      n == 0
@@ -92,5 +94,7 @@ let uppercase? = (between (ord "A") (ord "Z")) . ord
 let alphabetical? x = lowercase? x or uppercase? x
 let alphanumeric? x = alphabetical? x or digit? x
 in
-itoa 123 >> echo
-# atoi "123" >> echo
+splitat 3 [1,2,3,4,5,6]
+
+
+
