@@ -79,6 +79,13 @@ type_t *new_fun_type(type_t *t, type_t *u) {
 type_t *prune(type_t *t) {
     return t->variable and t->instance ? (t->instance = prune(t->instance)) : t;
 }
+bool in_type(type_t *var, type_t *type) {
+    type = prune(type);
+    if (type->variable) return var == type;
+    for (types_t *i = type->args; i; i = i->next)
+        if (in_type(var, i->type)) return true;
+    return false;
+}
 type_t *fresh_var(type_t *var, sub_t **subs) {
     for (sub_t *i = *subs; i; i = i->next)
         if (i->from == var) return i->to;
@@ -94,17 +101,10 @@ type_t *fresh(type_t *t, types_t *nongeneric, sub_t **subs) {
     t = prune(t);
     if (t->variable)
         for (types_t *i = nongeneric; i; i = i->next)
-            if (i->type == t) return t;
+            if (in_type(t, i->type)) return t;
     if (t->variable) return fresh_var(t, subs);
     if (not t->args) return t;
     return new_type_oper(t->name, fresh_args(t->args, nongeneric, subs));
-}
-bool in_type(type_t *var, type_t *type) {
-    type = prune(type);
-    if (type->variable) return var == type;
-    for (types_t *i = type->args; i; i = i->next)
-        if (in_type(var, i->type)) return true;
-    return false;
 }
 bool _unify(type_t *t, type_t *u) {
     t = prune(t);
